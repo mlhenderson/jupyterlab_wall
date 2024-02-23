@@ -1,0 +1,150 @@
+/*
+    See the JupyterLab Developer Guide for useful CSS Patterns:
+
+    https://jupyterlab.readthedocs.io/en/stable/developer/css.html
+*/
+
+.jp-jupyterlab-wall-header
+{
+    min-height: 3rem;
+    background-color: #ff7276;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    -webkit-justify-content: space-between;
+}
+
+.jp-jupyterlab-wall-header-message
+{
+    order: 1;
+    height: 3rem;
+    font-size: 2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    position: absolute;
+    margin: 0 32px auto;
+    width: inherit;
+}
+
+.jp-jupyterlab-wall-header-message p {
+    display: inline-block;
+    margin-top: 0;
+    margin-bottom: 0;
+    vertical-align: middle;
+    animation: jp-jupyterlab-wall-header-message-animation 15s linear infinite;
+    animation-delay: 0s;
+}
+
+@keyframes jp-jupyterlab-wall-header-message-animation {
+    0% {
+        transform: translate(0, 0);
+        margin-left: 100%;
+    }
+    100% {
+        transform: translate(-100%, 0);
+        margin-left: 0;
+    }
+}
+
+.jp-jupyterlab-wall-header-button-outer {
+    height: 100%;
+    width: 1.5rem;
+    z-index: 1;
+    order: 2;
+    background-color: var(--jp-layout-color2);
+    color: var(--jp-ui-font-color1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.jp-jupyterlab-wall-header-button
+{
+    position: relative;
+    height: 1.5rem;
+    width: 1.5rem;
+    z-index: 1;
+}
+
+.jp-jupyterlab-wall-header-button-outer:hover
+{
+    background-color: var(--jp-layout-color1);
+    color: var(--jp-ui-inverse-font-color1);
+}
+
+.jp-jupyterlab-wall-header-icon
+{
+    order: 0;
+    height: 32px;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.jp-jupyterlab-wall-header-sidepanel
+{
+    height: 100%;
+    width: 0;
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    right: 0;
+    background-color: white;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    padding-top: 0;
+    transition: 0.25s;
+}
+
+.jp-jupyterlab-wall-header-sidepanel-open
+{
+    width: 250px;
+}
+
+.jp-jupyterlab-wall-header-menu
+{
+    background-color: var(--jp-layout-color1);
+    color: var(--jp-ui-font-color1);
+    width: 100%;
+    margin-top: 0;
+    padding-left: 0;
+}
+
+.jp-jupyterlab-wall-header-menu li
+{
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+    overflow: hidden;
+    position: relative;
+    top: 100%;
+    width: 100%;
+    font-size: var(--jp-ui-font-size1);
+}
+
+.jp-jupyterlab-wall-header-menu li:hover {
+    background-color: var(--jp-layout-color2);
+}
+
+.jp-jupyterlab-wall-header-menu-item {
+    display: flex;
+    width: 15rem;
+    height: 1rem;
+}
+
+.jp-jupyterlab-wall-header-menu-item-icon {
+    margin-left: 0.25rem;
+    margin-right: 0.25rem;
+    width: 1rem;
+    height: 1rem;
+}
+
+[data-jp-theme-light="false"] .jp-jupyterlab-wall-header-button {
+    background-color: var(--jp-layout-color1);
+    color: var(--jp-ui-font-color1);
+}
+
+[data-jp-theme-light="false"] .jp-jupyterlab-wall-header-button:hover {
+    background-color: var(--jp-inverse-layout-color3);
+    color: var(--jp-layout-color0);
+}
