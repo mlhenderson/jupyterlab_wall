@@ -38,22 +38,13 @@ export class AlertMessage {
     return this.alertID;
   }
 
-  public toJSONString(): string {
-    return JSON.stringify({
-      type: this.alertType,
-      message: this.message,
-      priority: this.priority,
-      start: this.start.toISOString()
-    });
-  }
-
   public toJSON(): AlertMessageJSON {
-    return {
-      type: this.alertType,
-      message: this.message,
-      priority: this.priority,
-      start: this.start.toISOString()
-    };
+    return new AlertMessageJSON(
+      this.alertType,
+      this.message,
+      this.priority,
+      this.start.toISOString()
+    );
   }
 }
 
@@ -62,4 +53,16 @@ export class AlertMessageJSON {
   message: string;
   priority: number;
   start: string;
+
+  public constructor(
+    type: string,
+    message: string,
+    priority: number,
+    start: string
+  ) {
+    this.type = type;
+    this.message = message;
+    this.priority = priority;
+    this.start = start;
+  }
 }

@@ -40,19 +40,12 @@ export class AlertManager extends Object {
   private state: IStateDB;
   private pollInterval: number;
 
-  public constructor(
-    app: JupyterFrontEnd,
-    state: IStateDB,
-    pollInterval = 5000 + Math.floor(Math.random() * 1001)
-  ) {
+  public constructor(app: JupyterFrontEnd, state: IStateDB) {
     super();
     this.app = app;
     this.state = state;
     this.stateMutex = new Mutex();
-
-    if (pollInterval > 0) {
-      this.pollInterval = pollInterval;
-    }
+    this.pollInterval = 5000 + Math.floor(Math.random() * 1001);
 
     this.app.commands.commandExecuted.connect(async (_, args) => {
       // make sure new tabs opened after alerts have started will get a header
@@ -66,13 +59,6 @@ export class AlertManager extends Object {
 
   public getPollInterval(): number {
     return this.pollInterval;
-  }
-
-  public setPollInterval(value: number): void {
-    if (value <= 0) {
-      throw Error('poll interval must be greater than 0');
-    }
-    this.pollInterval = value;
   }
 
   async watchAlertStatus(): Promise<void> {
@@ -228,7 +214,7 @@ export class AlertManager extends Object {
     return requestAPI<any>('should_alert').then(async result => {
       try {
         if (result === null || result === undefined) {
-          return;
+          return [];
         }
         const alertMessages: AlertMessage[] = [];
         for (const k in result.data) {
