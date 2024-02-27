@@ -8,12 +8,18 @@
 
         python3 binder/postBuild
 """
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 
 ROOT = Path.cwd()
+
+# copy in the example server config
+shutil.copy(
+    'jupyter_jupyterlab_wall_config.py',
+    Path.home().joinpath('.jupyter', 'jupyter_jupyterlab_wall_config.py'))
 
 def _(*args, **kwargs):
     """ Run a command, echoing the args
