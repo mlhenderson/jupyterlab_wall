@@ -8,6 +8,7 @@
 
         python3 binder/postBuild
 """
+import os
 import shutil
 import subprocess
 import sys
@@ -17,6 +18,7 @@ from pathlib import Path
 ROOT = Path.cwd()
 
 # copy in the example server config
+os.makedirs(Path.home().joinpath('.jupyter'), exist_ok=True)
 shutil.copy(
     ROOT.joinpath('jupyter_jupyterlab_wall_config.py'),
     Path.home().joinpath('.jupyter', 'jupyter_jupyterlab_wall_config.py'))
