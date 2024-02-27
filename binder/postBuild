@@ -18,7 +18,7 @@ ROOT = Path.cwd()
 
 # copy in the example server config
 shutil.copy(
-    'jupyter_jupyterlab_wall_config.py',
+    ROOT.joinpath('jupyter_jupyterlab_wall_config.py'),
     Path.home().joinpath('.jupyter', 'jupyter_jupyterlab_wall_config.py'))
 
 def _(*args, **kwargs):
