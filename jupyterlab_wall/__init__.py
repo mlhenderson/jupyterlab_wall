@@ -8,9 +8,6 @@ from .config import AlertsConfig
 logger = logging.getLogger(__file__)
 HERE = osp.abspath(osp.dirname(__file__))
 
-logging.basicConfig(filename='/tmp/jupyterlab_wall_logs', level=logging.DEBUG)
-logger.debug('jupyterlab_wall server module init')
-
 try:
     with open(osp.join(HERE, 'labextension', 'package.json')) as fid:
         data = json.load(fid)
@@ -39,10 +36,10 @@ def _load_jupyter_server_extension(server_app):
         JupyterLab application instance
     """
     try:
-        logger.info('jupyterlab_wall server extension loaded\n')
+        logger.debug('jupyterlab_wall server extension loading\n')
         config = AlertsConfig(parent=server_app)
         data = config.get_alerts_config()
-        server_app.web_app.settings.update({'alerts': config.get_alerts_config()})
+        server_app.web_app.settings.update({'alerts': data})
         setup_handlers(server_app.web_app, logger)
         name = "jupyterlab_wall"
         server_app.log.info(f"Registered {name} server extension")

@@ -65,13 +65,13 @@ def setup_handlers(web_app, log=None):
             log = logging.getLogger(__file__)
 
         base_url = web_app.settings["base_url"]
+        alerts = web_app.settings["alerts"]
 
-        if "alerts" in web_app.settings:
-            alerts = web_app.settings["alerts"]
-        else:
+        if len(alerts) == 0:
+            log.warning('No alerts were configured! Adding sample test_alert config.')
             alerts = {
-                "shutdown_alert": {
-                    "message": 'This is a test!', "watch_file": '/home/jovyan/shutdown_test', "priority": 1}}
+                "test_alert": {
+                    "message": 'This is a test!', "watch_file": '/tmp/alert_test', "priority": 1}}
 
         handlers = [
             (url_path_join(base_url, "jupyterlab_wall", "get_example"), ExampleHandler, dict(log=log)),

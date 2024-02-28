@@ -12,7 +12,7 @@ for the frontend extension.
 
 ## Requirements
 
-* JupyterLab >= 3.0
+* JupyterLab >= 3.0 < 4
 
 ## Install
 
@@ -20,6 +20,24 @@ for the frontend extension.
 pip install jupyterlab_wall
 ```
 
+You will also need to define a set of alerts that should trigger, see 'jupyter_jupyterlab_wall_config.py' for examples.
+This config needs to be incorporated into your jupyter_server_config.py from one of the jupyter config paths
+to take effect.  You can define a new jupyter_server_config.py with the contents of 'jupyter_jupyterlab_wall_config.py'.
+
+You can see all the jupyter paths with:
+```bash
+jupyter --paths
+```
+
+As an example, you could copy the example alerts into your ${HOME}/.jupyter/ directory.
+```bash
+cp ./jupyter_jupyterlab_wall_config.py ${HOME}/.jupyter/jupyter_server_config.py
+```
+
+OR, append the example alerts to an existing file.
+```bash
+cat ./jupyter_jupyterlab_wall_config.py >> ${HOME}/.jupyter/jupyter_server_config.py
+```
 
 ## Troubleshoot
 
@@ -36,6 +54,15 @@ the frontend extension, check the frontend extension is installed:
 ```bash
 jupyter labextension list
 ```
+
+You can check to see what the current alerts config is:
+```bash
+jupyter server --show-config
+```
+
+If there are no alerts confined, a test_alert is defined internally that you can use to verify that the extension is
+working.  You can create the file '/tmp/alert_test', which will trigger an alert in jupyterlab if the extension
+is working correctly.
 
 
 ## Contributing
