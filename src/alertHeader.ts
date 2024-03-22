@@ -167,7 +167,7 @@ export class AlertHeader extends Widget {
       this.alerts.push(m);
       this.alerts.sort((a, b) => {
         if (a.getPriority() < b.getPriority()) {
-          return 0;
+          return -1;
         } else {
           return 1;
         }
