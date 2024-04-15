@@ -13,6 +13,7 @@ dependencies:
   # runtime dependencies
   - python >=3.8,<3.9.0a0
   - jupyterlab >=3,<4.0.0a0
+  - jupyterlab_pygments < 0.3.0
   # labextension build dependencies
   - nodejs >=16.0.0,<18
   - pip
