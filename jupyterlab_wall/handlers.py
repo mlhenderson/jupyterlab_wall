@@ -22,7 +22,7 @@ class ExampleHandler(APIHandler):
         result = {
             "data": "This is /jupyterlab_wall/get_example endpoint!"
         }
-        self.finish(result)
+        self.finish(json.dumps(result))
 
 
 class AlertHandler(APIHandler):
@@ -72,6 +72,8 @@ def setup_handlers(web_app, log=None):
             alerts = {
                 "test_alert": {
                     "message": 'This is a test!', "watch_file": '/tmp/alert_test', "priority": 1}}
+
+        log.exception('{}'.format(url_path_join(base_url, "jupyterlab_wall", "get_example")))
 
         handlers = [
             (url_path_join(base_url, "jupyterlab_wall", "get_example"), ExampleHandler, dict(log=log)),

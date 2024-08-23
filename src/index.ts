@@ -23,11 +23,15 @@ const plugin: JupyterFrontEndPlugin<void> = {
   ) => {
     console.log('JupyterLab extension jupyterlab-wall is activated!');
 
-    requestAPI<any>('get_example').catch(reason => {
-      console.error(
-        `The jupyterlab_wall server extension appears to be missing.\n${reason}`
-      );
-    });
+    requestAPI<any>('get_example')
+      .then(data => {
+        console.log(data);
+      })
+      .catch(reason => {
+        console.error(
+          `The jupyterlab_wall server extension appears to be missing.\n${reason}`
+        );
+      });
 
     try {
       const manager = new AlertManager(app, state);

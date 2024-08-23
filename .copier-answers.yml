@@ -1,0 +1,19 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: v4.2.0
+_src_path: https://github.com/jupyterlab/extension-template
+author_email: mhenderson@lbl.gov
+author_name: Matt Henderson
+data_format: string
+file_extension: ''
+has_binder: false
+has_settings: false
+kind: server
+labextension_name: jupyterlab-wall
+mimetype: ''
+mimetype_name: ''
+project_short_description: A JupyterLab extension to alert users of system events.
+python_name: jupyterlab_wall
+repository: ''
+test: true
+viewer_name: ''
+

@@ -85,18 +85,16 @@ export class AlertManager extends Object {
     const serviceAlerts: AlertMessage[] = await this._getServiceAlerts();
 
     // get the current active alerts in widgets
-    const prevServiceAlerts: AlertMessage[] = await this._getSavedAlerts(
-      ACTIVE_ALERTS
-    );
+    const prevServiceAlerts: AlertMessage[] =
+      await this._getSavedAlerts(ACTIVE_ALERTS);
 
     // exit if nothing to do
     if (serviceAlerts.length === 0 && prevServiceAlerts.length === 0) {
       return;
     }
 
-    const dismissedAlerts: AlertMessage[] = await this._getSavedAlerts(
-      DISMISSED_ALERTS
-    );
+    const dismissedAlerts: AlertMessage[] =
+      await this._getSavedAlerts(DISMISSED_ALERTS);
 
     // clean out obsolete alerts from widgets
     prevServiceAlerts.forEach(value => {
@@ -157,9 +155,8 @@ export class AlertManager extends Object {
 
   private async _handleNewHeaders(): Promise<void> {
     // get the current active alerts in widgets
-    const serviceAlerts: AlertMessage[] = await this._getSavedAlerts(
-      ACTIVE_ALERTS
-    );
+    const serviceAlerts: AlertMessage[] =
+      await this._getSavedAlerts(ACTIVE_ALERTS);
 
     // exit if nothing to do
     if (serviceAlerts.length === 0) {
@@ -167,9 +164,8 @@ export class AlertManager extends Object {
     }
 
     // clean out dismissed alerts that are no longer active
-    const dismissedAlerts: AlertMessage[] = await this._getSavedAlerts(
-      DISMISSED_ALERTS
-    );
+    const dismissedAlerts: AlertMessage[] =
+      await this._getSavedAlerts(DISMISSED_ALERTS);
 
     // drop any dismissed alerts from incoming alerts for widgets
     const newTabAlerts: AlertMessage[] = Array.from(serviceAlerts).filter(
@@ -190,8 +186,10 @@ export class AlertManager extends Object {
     const shell = this.app.shell as LabShell;
     const widgets = shell.widgets();
     let w = null;
-    while ((w = widgets.next()) !== undefined) {
+    const processWidgets = () => {
+      w = widgets.next().value;
       try {
+        console.log(w);
         if (
           w instanceof MainAreaWidget &&
           !w.isDisposed &&
@@ -205,7 +203,11 @@ export class AlertManager extends Object {
       } catch (reason) {
         console.error(`Unexpected error adding alert to tab.\n${reason}`);
       }
-    }
+      if (w !== undefined) {
+        setTimeout(processWidgets, 1);
+      }
+    };
+    processWidgets();
     return Promise.resolve();
   }
 
@@ -238,9 +240,8 @@ export class AlertManager extends Object {
   }
 
   private async _dismissAlert(_: AlertHeader, m: AlertMessage): Promise<void> {
-    const dismissedAlerts: AlertMessage[] = await this._getSavedAlerts(
-      DISMISSED_ALERTS
-    );
+    const dismissedAlerts: AlertMessage[] =
+      await this._getSavedAlerts(DISMISSED_ALERTS);
     dismissedAlerts.push(m);
     await this._saveAlerts(dismissedAlerts, DISMISSED_ALERTS);
     this._alertRemovedSignal.emit(m);
