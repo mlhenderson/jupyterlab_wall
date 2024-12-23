@@ -35,8 +35,8 @@ jobs:
       if: ( startsWith(runner.os, 'Linux') || startsWith(runner.os, 'macOS') )
       run: |
         jupyter server extension list 2>&1 | tee serverextension.list
-        cat serverextension.list | grep -ie "jupyterlab_examples_server.*OK"
+        cat serverextension.list | grep -ie "jupyterlab_wall.*OK"
         jupyter labextension list 2>&1 | tee labextension.list
-        cat labextension.list | grep -ie "@jupyterlab-examples/server-extension.*OK"
+        cat labextension.list | grep -ie "jupyterlab-wall.*OK"
     - name: Run the browser_check
       run: python -m jupyterlab.browser_check
