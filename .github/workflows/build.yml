@@ -11,25 +11,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: Install node
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v4
       with:
        node-version: '18.x'
     - name: Install Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-        architecture: 'x64'
-    - name: Install dependencies
+    - name: Install python dependencies
       run: python -m pip install jupyterlab
     - name: Build the extension
       run: |
         jlpm
         jlpm run eslint:check
         python -m pip install .
-
-        jupyter serverextension list 2>&1 | grep -ie "jupyterlab_wall.*OK"
-
-        jupyter labextension list 2>&1 | grep -ie "jupyterlab-wall.*OK"
-        python -m jupyterlab.browser_check
+    - name: Install node test dependencies
+      run: |
+        jlpm add playwright @playwright/test
+        jlpm playwright install chromium
+    - name: Check the extension
+      if: ( startsWith(runner.os, 'Linux') || startsWith(runner.os, 'macOS') )
+      run: |
+        jupyter server extension list 2>&1 | tee serverextension.list
+        cat serverextension.list | grep -ie "jupyterlab_examples_server.*OK"
+        jupyter labextension list 2>&1 | tee labextension.list
+        cat labextension.list | grep -ie "@jupyterlab-examples/server-extension.*OK"
+    - name: Run the browser_check
+      run: python -m jupyterlab.browser_check
