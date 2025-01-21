@@ -1,6 +1,4 @@
 import logging
-import json
-import os.path as osp
 
 try:
     from ._version import __version__
@@ -15,18 +13,11 @@ from .config import AlertsConfig
 from .handlers import setup_handlers
 
 logger = logging.getLogger(__file__)
-HERE = osp.abspath(osp.dirname(__file__))
-
-try:
-    with open(osp.join(HERE, 'labextension', 'package.json')) as fid:
-        data = json.load(fid)
-except Exception as e:
-    logger.exception(e)
 
 def _jupyter_labextension_paths():
     return [{
         'src': 'labextension',
-        'dest': data['name']
+        'dest': 'jupyterlab_wall'
     }]
 
 from .handlers import setup_handlers
