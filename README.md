@@ -1,6 +1,9 @@
 # jupyterlab_wall
 
 ![Github Actions Status](https://github.com/mlhenderson/jupyterlab_wall/workflows/Build/badge.svg)
+![Github Actions Status](https://github.com/mlhenderson/jupyterlab_wall/workflows/Security%20Audit/badge.svg)
+![Python Coverage](https://img.shields.io/badge/coverage-90%25-success)
+![JS Unit Test Coverage](https://img.shields.io/badge/JS%20unit%20coverage-80%25-success)
 
 A JupyterLab extension to alert users of system events.
 
@@ -108,3 +111,37 @@ jupyter lab build --minimize=False
 ```bash
 pip uninstall jupyterlab_wall
 ```
+
+## Testing
+
+### Python Tests
+
+This extension uses `pytest` for Python tests. To run the tests, install the test dependencies and run `pytest`:
+
+```bash
+pip install pytest pytest-cov pytest-jupyter
+python -m pytest --cov=jupyterlab_wall jupyterlab_wall/tests
+```
+
+### JS Unit Tests
+
+This extension uses `jest` for JavaScript/TypeScript unit tests. To run the tests:
+
+```bash
+jlpm test
+```
+
+Unit tests are located in the `tests/` directory.
+
+### UI Tests
+
+UI tests are powered by Playwright and Galata. To run them:
+
+```bash
+cd ui-tests
+jlpm install
+jlpm playwright install
+jlpm test
+```
+
+These tests are automatically run in the GitHub Actions CI workflow on every push and pull request.

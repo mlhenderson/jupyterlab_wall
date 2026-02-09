@@ -21,16 +21,29 @@ jobs:
       with:
         python-version: '3.11'
     - name: Install python dependencies
-      run: python -m pip install jupyterlab
+      run: |
+        python -m pip install -U jupyterlab
+        python -m pip install pytest pytest-cov pytest-jupyter
     - name: Build the extension
       run: |
         jlpm
         jlpm run eslint:check
         python -m pip install .
+    - name: Run python tests
+      run: |
+        python -m pytest --cov=jupyterlab_wall jupyterlab_wall/tests
+    - name: Run JS unit tests
+      run: |
+        jlpm test
     - name: Install node test dependencies
       run: |
-        jlpm add playwright @playwright/test
+        cd ui-tests
+        jlpm install
         jlpm playwright install chromium
+    - name: Run UI tests
+      run: |
+        cd ui-tests
+        jlpm test
     - name: Check the extension
       if: ( startsWith(runner.os, 'Linux') || startsWith(runner.os, 'macOS') )
       run: |

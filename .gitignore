@@ -117,8 +117,21 @@ dmypy.json
 
 # End of https://www.gitignore.io/api/python
 
-# OSX files
-.DS_Store
-
-# Yarn cache
+# Yarn cache and logs
 .yarn/
+*.log
+yarn-error.log
+
+# IDEs
+.idea/
+.vscode/
+
+# Coverage and test artifacts
+coverage/
+junit.xml
+
+# UI Test artifacts
+ui-tests/node_modules/
+ui-tests/shutdown_test
+ui-tests/job_test
+ui-tests/quota_test

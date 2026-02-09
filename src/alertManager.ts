@@ -62,6 +62,7 @@ export class AlertManager extends Object {
   }
 
   async watchAlertStatus(): Promise<void> {
+    this._handleIncomingAlerts();
     setInterval(this._handleIncomingAlerts, this.pollInterval);
   }
 

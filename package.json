@@ -1,6 +1,6 @@
 {
     "name": "jupyterlab-wall",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "description": "A JupyterLab extension to alert users of system events.",
     "keywords": [
         "jupyter",
@@ -69,8 +69,6 @@
         "@jupyterlab/testutils": "^4.0.0",
         "@types/jest": "^29.2.0",
         "@types/json-schema": "^7.0.11",
-        "@types/react": "^18.0.26",
-        "@types/react-addons-linked-state-mixin": "^0.14.22",
         "@typescript-eslint/eslint-plugin": "^6.1.0",
         "@typescript-eslint/parser": "^6.1.0",
         "css-loader": "^6.7.1",
@@ -78,7 +76,6 @@
         "eslint-config-prettier": "^8.8.0",
         "eslint-plugin-prettier": "^5.0.0",
         "jest": "^29.2.0",
-        "mkdirp": "^1.0.3",
         "npm-run-all": "^4.1.5",
         "prettier": "^3.0.0",
         "rimraf": "^5.0.1",
@@ -89,8 +86,7 @@
         "stylelint-config-standard": "^34.0.0",
         "stylelint-csstree-validator": "^3.0.0",
         "stylelint-prettier": "^4.0.0",
-        "typescript": "~5.0.2",
-        "yjs": "^13.5.0"
+        "typescript": "~5.0.2"
     },
     "sideEffects": [
         "style/*.css",
@@ -99,6 +95,9 @@
     "styleModule": "style/index.js",
     "publishConfig": {
         "access": "public"
+    },
+    "resolutions": {
+        "tar": "^7.4.5"
     },
     "jupyterlab": {
         "discovery": {
