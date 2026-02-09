@@ -19,6 +19,8 @@ const baseConfig = jestJupyterLab(__dirname);
 module.exports = {
   ...baseConfig,
   automock: false,
+  // Avoid scanning the prebuilt labextension output (has its own package.json)
+  modulePathIgnorePatterns: ['<rootDir>/jupyterlab_wall/labextension'],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
@@ -27,5 +29,7 @@ module.exports = {
   coverageReporters: ['lcov', 'text'],
   testRegex: 'tests/.*\\.spec\\.ts[x]?$',
   testPathIgnorePatterns: ['/ui-tests/'],
-  transformIgnorePatterns: [`/node_modules/(?!${esModules}).+`]
+  transformIgnorePatterns: [`/node_modules/(?!${esModules}).+`],
+  // Ensure missing Web APIs are polyfilled for the JSDOM environment used by @jupyterlab/testing
+  setupFilesAfterEnv: ['<rootDir>/tests/jest.polyfills.ts']
 };
