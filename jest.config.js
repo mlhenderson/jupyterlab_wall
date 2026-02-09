@@ -20,7 +20,12 @@ module.exports = {
   ...baseConfig,
   automock: false,
   // Avoid scanning the prebuilt labextension output (has its own package.json)
-  modulePathIgnorePatterns: ['<rootDir>/jupyterlab_wall/labextension'],
+  modulePathIgnorePatterns: [
+    '<rootDir>/jupyterlab_wall/labextension',
+    '<rootDir>/build/lib/jupyterlab_wall/labextension'
+  ],
+  // Use standard jsdom environment to avoid File undefined error in FixJSDOMEnvironment
+  testEnvironment: 'jsdom',
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
