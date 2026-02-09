@@ -1,0 +1,12 @@
+version: "2.2"
+
+services:
+  jupyterlab:
+    build: .
+    hostname: jupyterlab
+    volumes:
+      - ./:/usr/local/jupyterlab_wall
+    ports:
+      - "8888:8888"
+    entrypoint: ["start.sh", "jupyter", "lab", "--LabApp.token=''", "--log-level=0", "--debug", "--watch=True", "--autoreload"]
+
