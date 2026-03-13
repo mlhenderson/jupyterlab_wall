@@ -186,30 +186,25 @@ export class AlertManager extends Object {
 
     const shell = this.app.shell as LabShell;
     const widgets = shell.widgets();
-    let w = null;
-    const processWidgets = () => {
-      w = widgets.next().value;
+    let w = widgets.next();
+    while (!w.done) {
+      const widget = w.value;
       try {
-        console.log(w);
         if (
-          w instanceof MainAreaWidget &&
-          !w.isDisposed &&
-          w.contentHeader.widgets.length === 0
+          widget instanceof MainAreaWidget &&
+          !widget.isDisposed &&
+          widget.contentHeader.widgets.length === 0
         ) {
           // create a new widget with current alerts
-          const widget: AlertHeader = new AlertHeader(newTabAlerts, this);
-          w.contentHeader.direction = 'left-to-right';
-          w.contentHeader.addWidget(widget);
+          const alertHeader: AlertHeader = new AlertHeader(newTabAlerts, this);
+          widget.contentHeader.direction = 'left-to-right';
+          widget.contentHeader.addWidget(alertHeader);
         }
       } catch (reason) {
         console.error(`Unexpected error adding alert to tab.\n${reason}`);
       }
-      if (w !== undefined) {
-        setTimeout(processWidgets, 1);
-      }
-    };
-    processWidgets();
-    return Promise.resolve();
+      w = widgets.next();
+    }
   }
 
   private async _getServiceAlerts(): Promise<AlertMessage[]> {
@@ -250,9 +245,9 @@ export class AlertManager extends Object {
   }
 
   private async _getSavedAlerts(alertsKey: string): Promise<AlertMessage[]> {
-    return this.state
-      .fetch(alertsKey)
-      .then(alertsValue => {
+    await this.stateMutex.lock();
+    try {
+      return await this.state.fetch(alertsKey).then(alertsValue => {
         if (alertsValue === undefined) {
           return [];
         }
@@ -272,12 +267,14 @@ export class AlertManager extends Object {
           );
         }
         return alerts;
-      })
-      .catch(e => {
-        console.error(`_fetchAlerts(${alertsKey}) fetch failed`);
-        console.error(e);
-        return [];
       });
+    } catch (e) {
+      console.error(`_fetchAlerts(${alertsKey}) fetch failed`);
+      console.error(e);
+      return [];
+    } finally {
+      this.stateMutex.unlock();
+    }
   }
 
   private async _saveAlerts(
@@ -285,21 +282,24 @@ export class AlertManager extends Object {
     alertsKey: string
   ): Promise<boolean> {
     await this.stateMutex.lock();
-    const alertsJSON: { [k: string]: any } = {};
-    alerts.forEach(value => (alertsJSON[value.getID()] = value.toJSON()));
+    try {
+      const alertsJSON: { [k: string]: any } = {};
+      alerts.forEach(value => (alertsJSON[value.getID()] = value.toJSON()));
 
-    const result = await this.state
-      .save(alertsKey, alertsJSON)
-      .then(_ => {
-        return true;
-      })
-      .catch(e => {
-        console.error(`_saveAlerts(${alerts}, ${alertsKey}) error`);
-        console.error(e);
-        return false;
-      });
-    this.stateMutex.unlock();
-    return Promise.resolve(result);
+      const result = await this.state
+        .save(alertsKey, alertsJSON)
+        .then(_ => {
+          return true;
+        })
+        .catch(e => {
+          console.error(`_saveAlerts(${alerts}, ${alertsKey}) error`);
+          console.error(e);
+          return false;
+        });
+      return result;
+    } finally {
+      this.stateMutex.unlock();
+    }
   }
 
   private _sendNotification(data: AlertMessage): void {

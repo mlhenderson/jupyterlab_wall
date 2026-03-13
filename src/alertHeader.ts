@@ -63,11 +63,13 @@ export class AlertHeader extends Widget {
     this.alertMessageOuterDiv.classList.add(
       'jp-jupyterlab-wall-header-message'
     );
+    this.alertMessageOuterDiv.style.pointerEvents = 'none';
     this.alertMessageDiv = document.createElement('p');
     this.alertMessageOuterDiv.append(this.alertMessageDiv);
 
     this.sidePanel = document.createElement('div');
     this.sidePanel.classList.add('jp-jupyterlab-wall-header-sidepanel');
+    this.sidePanel.style.pointerEvents = 'none';
     this.sidePanelButtonDiv = document.createElement('div');
     this.sidePanelButtonDiv.classList.add(
       'jp-jupyterlab-wall-header-button-outer'
@@ -76,6 +78,15 @@ export class AlertHeader extends Widget {
       this.sidePanel.classList.toggle(
         'jp-jupyterlab-wall-header-sidepanel-open'
       );
+      if (
+        this.sidePanel.classList.contains(
+          'jp-jupyterlab-wall-header-sidepanel-open'
+        )
+      ) {
+        this.sidePanel.style.pointerEvents = 'auto';
+      } else {
+        this.sidePanel.style.pointerEvents = 'none';
+      }
     };
     this.sidePanelOpenButton = document.createElement('div');
     this.sidePanelOpenButton.classList.add('jp-jupyterlab-wall-header-button');

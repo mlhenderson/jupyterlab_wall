@@ -9,6 +9,28 @@ import { open, rm } from 'fs/promises';
  */
 test.use({ autoGoto: false });
 
+const ACTIVE_ALERTS = 'jupyterlab-wall:activeAlerts';
+const DISMISSED_ALERTS = 'jupyterlab-wall:dismissedAlerts';
+
+test.beforeEach(async ({ page }) => {
+  await cleanup_trigger('shutdown_test');
+  await cleanup_trigger('job_test');
+  await cleanup_trigger('quota_test');
+
+  await page.goto();
+  await page.evaluate(
+    async ({ active, dismissed }) => {
+      if (window.jupyterapp && window.jupyterapp.restorer) {
+        await window.jupyterapp.restorer.state.remove(active);
+        await window.jupyterapp.restorer.state.remove(dismissed);
+      }
+    },
+    { active: ACTIVE_ALERTS, dismissed: DISMISSED_ALERTS }
+  );
+  // Reload to ensure the extension starts with a clean state
+  await page.reload();
+});
+
 test('should emit an activation console message', async ({ page }) => {
   const logs: string[] = [];
 
@@ -16,7 +38,9 @@ test('should emit an activation console message', async ({ page }) => {
     logs.push(message.text());
   });
 
-  await page.goto();
+  // We already did a goto in beforeEach, but we need to catch the activation message
+  // which happens on load. So we reload and listen.
+  await page.reload();
 
   try {
     expect(
@@ -30,9 +54,6 @@ test('should emit an activation console message', async ({ page }) => {
 });
 
 test('should not create an alert if no trigger file', async ({ page }) => {
-  await cleanup_trigger();
-  await page.goto();
-
   await expect(page.locator('.jp-jupyterlab-wall-header')).not.toBeVisible();
 });
 
@@ -41,7 +62,9 @@ test('should show multiple alerts and allow switching', async ({ page }) => {
   // Trigger another alert
   await trigger_alert('job_test');
 
-  await page.goto();
+  // We need to wait for the poller to pick up the new alerts.
+  // The poller runs every 5-6 seconds.
+  await page.waitForTimeout(7000);
 
   const header = page.locator('.jp-jupyterlab-wall-header');
   await expect(header).toBeVisible();
@@ -51,7 +74,8 @@ test('should show multiple alerts and allow switching', async ({ page }) => {
 
   // Check alert count label
   await expect(page.locator('.jp-jupyterlab-wall-header-menu')).toContainText(
-    '2 alerts'
+    '2 alerts',
+    { timeout: 10000 }
   );
 
   // Switch to next alert
@@ -93,7 +117,9 @@ test.afterEach(async ({ page }, testInfo) => {
 
 test('should create an alert and a notification', async ({ page }) => {
   await trigger_alert();
-  await page.goto();
+
+  // Wait for the poller
+  await page.waitForTimeout(7000);
 
   // Wait for the alert header to appear - we give it a bit more time because of the background poller interval
   const header = page.locator('.jp-jupyterlab-wall-header');
@@ -121,7 +147,9 @@ test('should create an alert and a notification', async ({ page }) => {
 
 test('should get an alert for each new tab', async ({ page }) => {
   await trigger_alert();
-  await page.goto();
+
+  // Wait for the poller
+  await page.waitForTimeout(7000);
 
   // Wait for the alert header to appear on the initial page (Launcher usually)
   const header = page.locator('.jp-jupyterlab-wall-header');
@@ -143,7 +171,9 @@ test('should get an alert for each new tab', async ({ page }) => {
 
 test('closing alert should not reopen if switching tabs', async ({ page }) => {
   await trigger_alert();
-  await page.goto();
+
+  // Wait for the poller
+  await page.waitForTimeout(7000);
 
   // Wait for the alert header to appear
   const header = page.locator('.jp-jupyterlab-wall-header');
