@@ -1,6 +1,6 @@
 {
     "name": "jupyterlab-wall",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "description": "A JupyterLab extension to alert users of system events.",
     "keywords": [
         "jupyter",
