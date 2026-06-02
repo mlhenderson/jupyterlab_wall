@@ -1,4 +1,5 @@
 import logging
+from jupyter_core.application import PageConfig
 
 try:
     from ._version import __version__
@@ -40,6 +41,7 @@ def _load_jupyter_server_extension(server_app):
         config = AlertsConfig(parent=server_app)
         data = config.get_alerts_config()
         server_app.web_app.settings.update({'alerts': data})
+        PageConfig.setOption("pollInterval", str(config.poll_interval * 1000))
         setup_handlers(server_app.web_app, logger)
         name = "jupyterlab_wall"
         server_app.log.info(f"Registered {name} server extension")

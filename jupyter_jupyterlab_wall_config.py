@@ -15,3 +15,5 @@ c.AlertsConfig.alerts = {
         "priority": 3
     }
 }
+
+c.AlertsConfig.poll_interval = 60  # seconds

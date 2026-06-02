@@ -2,6 +2,7 @@ import { ISignal, Signal } from '@lumino/signaling';
 import { JupyterFrontEnd, LabShell } from '@jupyterlab/application';
 import { IStateDB } from '@jupyterlab/statedb';
 import { MainAreaWidget, Notification } from '@jupyterlab/apputils';
+import { PageConfig } from '@jupyterlab/coreutils';
 import { AlertMessage } from './alertMessage';
 import { AlertHeader } from './alertHeader';
 import { requestAPI } from './handler';
@@ -45,7 +46,8 @@ export class AlertManager extends Object {
     this.app = app;
     this.state = state;
     this.stateMutex = new Mutex();
-    this.pollInterval = 5000 + Math.floor(Math.random() * 1001);
+    const configuredInterval = parseInt(PageConfig.getOption('pollInterval') || '60000', 10);
+    this.pollInterval = configuredInterval + Math.floor(Math.random() * (configuredInterval * 0.1));
 
     this.app.commands.commandExecuted.connect(async (_, args) => {
       // make sure new tabs opened after alerts have started will get a header

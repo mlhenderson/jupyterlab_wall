@@ -1,12 +1,19 @@
 import { AlertManager, ACTIVE_ALERTS } from '../src/alertManager';
 import { AlertMessage } from '../src/alertMessage';
 import { JupyterFrontEnd } from '@jupyterlab/application';
+import { PageConfig } from '@jupyterlab/coreutils';
 import { IStateDB } from '@jupyterlab/statedb';
 import { Signal } from '@lumino/signaling';
 
 // Mock requestAPI
 jest.mock('../src/handler', () => ({
   requestAPI: jest.fn()
+}));
+
+jest.mock('@jupyterlab/coreutils', () => ({
+  PageConfig: {
+    getOption: jest.fn()
+  }
 }));
 
 import { requestAPI } from '../src/handler';
@@ -17,6 +24,8 @@ describe('AlertManager', () => {
   let manager: AlertManager;
 
   beforeEach(() => {
+    (PageConfig.getOption as jest.Mock).mockReturnValue('');
+
     app = {
       commands: {
         commandExecuted: new Signal<any, any>({} as any)
@@ -36,10 +45,20 @@ describe('AlertManager', () => {
     manager = new AlertManager(app, state);
   });
 
-  it('should initialize correctly', () => {
-    expect(manager).toBeDefined();
-    expect(manager.getPollInterval()).toBeGreaterThanOrEqual(5000);
-    expect(manager.getPollInterval()).toBeLessThanOrEqual(6000);
+  describe('poll interval configuration', () => {
+    it('should use default poll interval when not set', () => {
+      (PageConfig.getOption as jest.Mock).mockReturnValue('');
+      const defaultManager = new AlertManager(app, state);
+      expect(defaultManager.getPollInterval()).toBeGreaterThanOrEqual(60000);
+      expect(defaultManager.getPollInterval()).toBeLessThanOrEqual(66000);
+    });
+
+    it('should use configured poll interval when set', () => {
+      (PageConfig.getOption as jest.Mock).mockReturnValue('30000');
+      const configuredManager = new AlertManager(app, state);
+      expect(configuredManager.getPollInterval()).toBeGreaterThanOrEqual(30000);
+      expect(configuredManager.getPollInterval()).toBeLessThanOrEqual(33000);
+    });
   });
 
   describe('_getServiceAlerts', () => {
