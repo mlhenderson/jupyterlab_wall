@@ -62,8 +62,11 @@ export class AlertManager extends Object {
   }
 
   async watchAlertStatus(): Promise<void> {
-    this._handleIncomingAlerts();
-    setInterval(this._handleIncomingAlerts, this.pollInterval);
+    setInterval(() => {
+      if (document.visibilityState !== 'hidden') {
+        this._handleIncomingAlerts();
+      }
+    }, this.pollInterval);
   }
 
   public get alertAddedSignal(): ISignal<this, AlertMessage> {
