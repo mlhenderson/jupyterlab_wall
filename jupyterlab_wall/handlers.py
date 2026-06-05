@@ -38,7 +38,7 @@ class BackgroundPoller:
             self._thread.join(timeout=1)
 
     def get_data(self):
-        return self._cache
+        return dict(self._cache)
 
     def _run(self):
         while self._running:
@@ -105,15 +105,17 @@ class ExampleHandler(APIHandler):
 
 
 class AlertHandler(APIHandler):
-    def initialize(self, poller, log=None) -> None:
+    def initialize(self, poller, poll_interval=60000, log=None) -> None:
         super().initialize()
         self.logger = log or logging.getLogger(__name__)
         self._poller = poller
+        self._poll_interval = poll_interval
 
     @tornado.web.authenticated
     def get(self, cache_buster=None):
         try:
             result = self._poller.get_data()
+            result['poll_interval'] = self._poll_interval
             self.finish(json.dumps(result))
         except Exception as e:
             self.logger.exception(e)
@@ -128,6 +130,7 @@ def setup_handlers(web_app, log=None):
 
         base_url = web_app.settings["base_url"]
         alerts = web_app.settings["alerts"]
+        poll_interval = web_app.settings.get("poll_interval", 60000)
 
         if len(alerts) == 0:
             log.warning('No alerts were configured! Adding sample test_alert config.')
@@ -145,7 +148,7 @@ def setup_handlers(web_app, log=None):
         handlers = [
             (url_path_join(base_url, "jupyterlab_wall", "get_example"), ExampleHandler, dict(log=log)),
             (url_path_join(base_url, "jupyterlab_wall", "should_alert"), AlertHandler,
-             dict(poller=poller, log=log))
+             dict(poller=poller, poll_interval=poll_interval, log=log))
             ]
         web_app.add_handlers(host_pattern, handlers)
     except Exception as e:

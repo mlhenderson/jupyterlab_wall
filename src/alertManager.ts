@@ -2,7 +2,6 @@ import { ISignal, Signal } from '@lumino/signaling';
 import { JupyterFrontEnd, LabShell } from '@jupyterlab/application';
 import { IStateDB } from '@jupyterlab/statedb';
 import { MainAreaWidget, Notification } from '@jupyterlab/apputils';
-import { PageConfig } from '@jupyterlab/coreutils';
 import { AlertMessage } from './alertMessage';
 import { AlertHeader } from './alertHeader';
 import { requestAPI } from './handler';
@@ -11,6 +10,18 @@ import { Mutex } from './utils';
 // state string keys for saving and fetching saved alerts
 export const ACTIVE_ALERTS = 'jupyterlab-wall:activeAlerts';
 export const DISMISSED_ALERTS = 'jupyterlab-wall:dismissedAlerts';
+
+interface IAlertData {
+  priority: number;
+  message: string;
+  active: boolean;
+  start: string;
+}
+
+interface IAlertResponse {
+  data: Record<string, IAlertData>;
+  poll_interval?: number;
+}
 
 /* JupyterLab commands that correspond to MainAreaWidget tab creation */
 export const TRIGGER_COMMANDS = [
@@ -46,8 +57,7 @@ export class AlertManager extends Object {
     this.app = app;
     this.state = state;
     this.stateMutex = new Mutex();
-    const configuredInterval = parseInt(PageConfig.getOption('pollInterval') || '60000', 10);
-    this.pollInterval = configuredInterval + Math.floor(Math.random() * (configuredInterval * 0.1));
+    this.pollInterval = 60000 + Math.floor(Math.random() * (60000 * 0.1));
 
     this.app.commands.commandExecuted.connect(async (_, args) => {
       // make sure new tabs opened after alerts have started will get a header
@@ -64,6 +74,7 @@ export class AlertManager extends Object {
   }
 
   async watchAlertStatus(): Promise<void> {
+    await this._handleIncomingAlerts();
     setInterval(() => {
       if (document.visibilityState !== 'hidden') {
         this._handleIncomingAlerts();
@@ -214,10 +225,15 @@ export class AlertManager extends Object {
 
   private async _getServiceAlerts(): Promise<AlertMessage[]> {
     // fetch alert status from the backend service
-    return requestAPI<any>('should_alert').then(async result => {
+    return requestAPI<IAlertResponse>('should_alert').then(async result => {
       try {
         if (result === null || result === undefined) {
           return [];
+        }
+        if (result.poll_interval) {
+          const interval = result.poll_interval;
+          this.pollInterval =
+            interval + Math.floor(Math.random() * (interval * 0.1));
         }
         const alertMessages: AlertMessage[] = [];
         for (const k in result.data) {

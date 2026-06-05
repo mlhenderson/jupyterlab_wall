@@ -1,19 +1,12 @@
 import { AlertManager, ACTIVE_ALERTS } from '../src/alertManager';
 import { AlertMessage } from '../src/alertMessage';
 import { JupyterFrontEnd } from '@jupyterlab/application';
-import { PageConfig } from '@jupyterlab/coreutils';
 import { IStateDB } from '@jupyterlab/statedb';
 import { Signal } from '@lumino/signaling';
 
 // Mock requestAPI
 jest.mock('../src/handler', () => ({
   requestAPI: jest.fn()
-}));
-
-jest.mock('@jupyterlab/coreutils', () => ({
-  PageConfig: {
-    getOption: jest.fn()
-  }
 }));
 
 import { requestAPI } from '../src/handler';
@@ -24,8 +17,6 @@ describe('AlertManager', () => {
   let manager: AlertManager;
 
   beforeEach(() => {
-    (PageConfig.getOption as jest.Mock).mockReturnValue('');
-
     app = {
       commands: {
         commandExecuted: new Signal<any, any>({} as any)
@@ -46,18 +37,21 @@ describe('AlertManager', () => {
   });
 
   describe('poll interval configuration', () => {
-    it('should use default poll interval when not set', () => {
-      (PageConfig.getOption as jest.Mock).mockReturnValue('');
+    it('should use default poll interval', () => {
       const defaultManager = new AlertManager(app, state);
       expect(defaultManager.getPollInterval()).toBeGreaterThanOrEqual(60000);
       expect(defaultManager.getPollInterval()).toBeLessThanOrEqual(66000);
     });
 
-    it('should use configured poll interval when set', () => {
-      (PageConfig.getOption as jest.Mock).mockReturnValue('30000');
-      const configuredManager = new AlertManager(app, state);
-      expect(configuredManager.getPollInterval()).toBeGreaterThanOrEqual(30000);
-      expect(configuredManager.getPollInterval()).toBeLessThanOrEqual(33000);
+    it('should update poll interval from API response', async () => {
+      const mockData = {
+        data: {},
+        poll_interval: 30000
+      };
+      (requestAPI as jest.Mock).mockResolvedValue(mockData);
+      await (manager as any)._getServiceAlerts();
+      expect(manager.getPollInterval()).toBeGreaterThanOrEqual(30000);
+      expect(manager.getPollInterval()).toBeLessThanOrEqual(33000);
     });
   });
 
@@ -149,6 +143,60 @@ describe('AlertManager', () => {
       );
       expect(resultFail).toBe(false);
       consoleSpy.mockRestore();
+    });
+  });
+
+  describe('watchAlertStatus', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+      (requestAPI as jest.Mock).mockResolvedValue({ data: {} });
+      state.fetch.mockResolvedValue(undefined);
+      state.save.mockResolvedValue(undefined);
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should call _handleIncomingAlerts immediately', async () => {
+      const spy = jest.spyOn(manager, '_handleIncomingAlerts');
+      await manager.watchAlertStatus();
+      expect(spy).toHaveBeenCalledTimes(1);
+      spy.mockRestore();
+    });
+
+    it('should call _handleIncomingAlerts on interval when tab is visible', async () => {
+      const spy = jest.spyOn(manager, '_handleIncomingAlerts');
+      Object.defineProperty(document, 'visibilityState', {
+        value: 'visible',
+        writable: true,
+        configurable: true
+      });
+
+      await manager.watchAlertStatus();
+      expect(spy).toHaveBeenCalledTimes(1);
+
+      jest.advanceTimersByTime(manager.getPollInterval());
+      expect(spy).toHaveBeenCalledTimes(2);
+
+      spy.mockRestore();
+    });
+
+    it('should skip _handleIncomingAlerts when tab is hidden', async () => {
+      const spy = jest.spyOn(manager, '_handleIncomingAlerts');
+      Object.defineProperty(document, 'visibilityState', {
+        value: 'hidden',
+        writable: true,
+        configurable: true
+      });
+
+      await manager.watchAlertStatus();
+      expect(spy).toHaveBeenCalledTimes(1); // initial call
+
+      jest.advanceTimersByTime(manager.getPollInterval());
+      expect(spy).toHaveBeenCalledTimes(1); // not called again
+
+      spy.mockRestore();
     });
   });
 
