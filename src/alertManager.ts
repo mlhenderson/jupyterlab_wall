@@ -74,7 +74,7 @@ export class AlertManager extends Object {
   }
 
   async watchAlertStatus(): Promise<void> {
-    await this._handleIncomingAlerts();
+    this._handleIncomingAlerts();
     setInterval(() => {
       if (document.visibilityState !== 'hidden') {
         this._handleIncomingAlerts();

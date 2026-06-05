@@ -158,9 +158,9 @@ describe('AlertManager', () => {
       jest.useRealTimers();
     });
 
-    it('should call _handleIncomingAlerts immediately', async () => {
+    it('should call _handleIncomingAlerts immediately (fire-and-forget)', async () => {
       const spy = jest.spyOn(manager, '_handleIncomingAlerts');
-      await manager.watchAlertStatus();
+      manager.watchAlertStatus();
       expect(spy).toHaveBeenCalledTimes(1);
       spy.mockRestore();
     });
@@ -173,7 +173,7 @@ describe('AlertManager', () => {
         configurable: true
       });
 
-      await manager.watchAlertStatus();
+      manager.watchAlertStatus();
       expect(spy).toHaveBeenCalledTimes(1);
 
       jest.advanceTimersByTime(manager.getPollInterval());
@@ -190,7 +190,7 @@ describe('AlertManager', () => {
         configurable: true
       });
 
-      await manager.watchAlertStatus();
+      manager.watchAlertStatus();
       expect(spy).toHaveBeenCalledTimes(1); // initial call
 
       jest.advanceTimersByTime(manager.getPollInterval());
