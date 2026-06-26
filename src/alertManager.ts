@@ -74,11 +74,21 @@ export class AlertManager extends Object {
   }
 
   async watchAlertStatus(): Promise<void> {
-    this._handleIncomingAlerts();
-    setInterval(() => {
+    // Run the initial check and wait for it to complete so that any
+    // server-provided poll interval is applied before scheduling the poller.
+    await this._handleIncomingAlerts();
+    this._scheduleNextPoll();
+  }
+
+  private _scheduleNextPoll(): void {
+    // Use a self-rescheduling timeout so that updates to the poll interval
+    // (e.g. a value provided by the server) take effect on the next poll
+    // instead of being locked to the value present when polling started.
+    setTimeout(async () => {
       if (document.visibilityState !== 'hidden') {
-        this._handleIncomingAlerts();
+        await this._handleIncomingAlerts();
       }
+      this._scheduleNextPoll();
     }, this.pollInterval);
   }
 

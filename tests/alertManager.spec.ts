@@ -173,7 +173,7 @@ describe('AlertManager', () => {
         configurable: true
       });
 
-      manager.watchAlertStatus();
+      await manager.watchAlertStatus();
       expect(spy).toHaveBeenCalledTimes(1);
 
       jest.advanceTimersByTime(manager.getPollInterval());
@@ -190,7 +190,7 @@ describe('AlertManager', () => {
         configurable: true
       });
 
-      manager.watchAlertStatus();
+      await manager.watchAlertStatus();
       expect(spy).toHaveBeenCalledTimes(1); // initial call
 
       jest.advanceTimersByTime(manager.getPollInterval());

@@ -35,7 +35,9 @@ const plugin: JupyterFrontEndPlugin<void> = {
 
     try {
       const manager = new AlertManager(app, state);
-      await manager.watchAlertStatus();
+      // Don't await: activation must not block on the initial alert check /
+      // network request. watchAlertStatus schedules its own polling loop.
+      void manager.watchAlertStatus();
     } catch (e) {
       console.error(e);
     }
