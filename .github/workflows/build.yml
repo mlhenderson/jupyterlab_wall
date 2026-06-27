@@ -65,8 +65,9 @@ jobs:
       run: python -m jupyterlab.browser_check
 
   # --------------------------------------------------------------------------
-  # Discover every stable JupyterLab release newer than the pinned version.
-  # Emits a JSON array consumed by the (non-blocking) matrix job below.
+  # Discover the latest patch of each stable JupyterLab minor series newer
+  # than the pinned version. Emits a JSON array consumed by the (non-blocking)
+  # matrix job below.
   # --------------------------------------------------------------------------
   discover-newer:
     runs-on: ubuntu-latest
@@ -89,7 +90,9 @@ jobs:
         with urllib.request.urlopen("https://pypi.org/pypi/jupyterlab/json") as r:
             data = json.load(r)
 
-        newer = set()
+        # Keep only the latest patch for each (major, minor) series so the
+        # matrix tests one representative per minor line instead of every patch.
+        latest_per_minor = {}
         for ver, files in data["releases"].items():
             # skip empty/yanked release artifacts
             if not files or all(f.get("yanked") for f in files):
@@ -100,10 +103,13 @@ jobs:
                 continue
             if v.is_prerelease:
                 continue
-            if v > pinned:
-                newer.add(v)
+            if v <= pinned:
+                continue
+            key = (v.major, v.minor)
+            if key not in latest_per_minor or v > latest_per_minor[key]:
+                latest_per_minor[key] = v
 
-        versions = [str(v) for v in sorted(newer)]
+        versions = [str(v) for v in sorted(latest_per_minor.values())]
         print("versions=" + json.dumps(versions))
         PY
 
