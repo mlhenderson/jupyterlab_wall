@@ -6,7 +6,16 @@ on:
   pull_request:
     branches: '*'
 
+env:
+  # The JupyterLab version we contractually support (e.g. the NERSC default).
+  # This is the only job that is allowed to fail the workflow.
+  PINNED_JUPYTERLAB: '4.3.4'
+
 jobs:
+  # --------------------------------------------------------------------------
+  # Required job: test against the pinned, supported JupyterLab version.
+  # If this fails, the whole workflow fails.
+  # --------------------------------------------------------------------------
   build:
     runs-on: ubuntu-latest
     steps:
@@ -22,7 +31,7 @@ jobs:
         python-version: '3.11'
     - name: Install python dependencies
       run: |
-        python -m pip install -U jupyterlab
+        python -m pip install "jupyterlab==${PINNED_JUPYTERLAB}"
         python -m pip install pytest pytest-cov pytest-jupyter
         python -m pip install ipympl==0.9.8 matplotlib==3.10.8 matplotlib-inline==0.2.1
     - name: Build the extension
@@ -40,6 +49,121 @@ jobs:
       run: |
         cd ui-tests
         jlpm install
+        jlpm playwright install chromium
+    - name: Run UI tests
+      run: |
+        cd ui-tests
+        jlpm test
+    - name: Check the extension
+      if: ( startsWith(runner.os, 'Linux') || startsWith(runner.os, 'macOS') )
+      run: |
+        jupyter server extension list 2>&1 | tee serverextension.list
+        cat serverextension.list | grep -ie "jupyterlab_wall.*OK"
+        jupyter labextension list 2>&1 | tee labextension.list
+        cat labextension.list | grep -ie "jupyterlab-wall.*OK"
+    - name: Run the browser_check
+      run: python -m jupyterlab.browser_check
+
+  # --------------------------------------------------------------------------
+  # Discover the latest patch of each stable JupyterLab minor series newer
+  # than the pinned version. Emits a JSON array consumed by the (non-blocking)
+  # matrix job below.
+  # --------------------------------------------------------------------------
+  discover-newer:
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.find.outputs.versions }}
+    steps:
+    - name: Install Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Find newer JupyterLab releases on PyPI
+      id: find
+      run: |
+        python -m pip install --quiet packaging
+        python - <<'PY' >> "$GITHUB_OUTPUT"
+        import json, os, urllib.request
+        from packaging.version import Version, InvalidVersion
+
+        pinned = Version(os.environ["PINNED_JUPYTERLAB"])
+        with urllib.request.urlopen("https://pypi.org/pypi/jupyterlab/json") as r:
+            data = json.load(r)
+
+        # Keep only the latest patch for each (major, minor) series so the
+        # matrix tests one representative per minor line instead of every patch.
+        latest_per_minor = {}
+        for ver, files in data["releases"].items():
+            # skip empty/yanked release artifacts
+            if not files or all(f.get("yanked") for f in files):
+                continue
+            try:
+                v = Version(ver)
+            except InvalidVersion:
+                continue
+            if v.is_prerelease:
+                continue
+            if v <= pinned:
+                continue
+            key = (v.major, v.minor)
+            if key not in latest_per_minor or v > latest_per_minor[key]:
+                latest_per_minor[key] = v
+
+        versions = [str(v) for v in sorted(latest_per_minor.values())]
+        print("versions=" + json.dumps(versions))
+        PY
+
+  # --------------------------------------------------------------------------
+  # Non-blocking job: test each newer release, with Galata aligned to the
+  # JupyterLab that actually gets installed. continue-on-error means a failure
+  # here will NOT fail the workflow as long as the pinned `build` job passes.
+  # --------------------------------------------------------------------------
+  build-newer:
+    needs: discover-newer
+    if: ${{ needs.discover-newer.outputs.versions != '[]' }}
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        jupyterlab: ${{ fromJson(needs.discover-newer.outputs.versions) }}
+    name: build-newer (jupyterlab ${{ matrix.jupyterlab }})
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Install node
+      uses: actions/setup-node@v4
+      with:
+       node-version: '18.x'
+    - name: Install Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Install python dependencies
+      run: |
+        python -m pip install "jupyterlab==${{ matrix.jupyterlab }}"
+        python -m pip install pytest pytest-cov pytest-jupyter
+        python -m pip install ipympl==0.9.8 matplotlib==3.10.8 matplotlib-inline==0.2.1
+    - name: Build the extension
+      run: |
+        jlpm
+        jlpm run eslint:check
+        python -m pip install .
+    - name: Run python tests
+      run: |
+        python -m pytest --cov=jupyterlab_wall jupyterlab_wall/tests
+    - name: Run JS unit tests
+      run: |
+        jlpm test
+    - name: Install node test dependencies (align Galata to installed JupyterLab)
+      env:
+        # allow the lockfile to be updated for the aligned harness versions
+        YARN_ENABLE_IMMUTABLE_INSTALLS: 'false'
+      run: |
+        cd ui-tests
+        # Track the JupyterLab being tested instead of a fixed pin so the
+        # Galata readiness selectors stay in sync with the running Lab.
+        jlpm add -D @jupyterlab/galata@latest @playwright/test@latest
         jlpm playwright install chromium
     - name: Run UI tests
       run: |

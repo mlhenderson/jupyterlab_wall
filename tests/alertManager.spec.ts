@@ -36,10 +36,23 @@ describe('AlertManager', () => {
     manager = new AlertManager(app, state);
   });
 
-  it('should initialize correctly', () => {
-    expect(manager).toBeDefined();
-    expect(manager.getPollInterval()).toBeGreaterThanOrEqual(5000);
-    expect(manager.getPollInterval()).toBeLessThanOrEqual(6000);
+  describe('poll interval configuration', () => {
+    it('should use default poll interval', () => {
+      const defaultManager = new AlertManager(app, state);
+      expect(defaultManager.getPollInterval()).toBeGreaterThanOrEqual(60000);
+      expect(defaultManager.getPollInterval()).toBeLessThanOrEqual(66000);
+    });
+
+    it('should update poll interval from API response', async () => {
+      const mockData = {
+        data: {},
+        poll_interval: 30000
+      };
+      (requestAPI as jest.Mock).mockResolvedValue(mockData);
+      await (manager as any)._getServiceAlerts();
+      expect(manager.getPollInterval()).toBeGreaterThanOrEqual(30000);
+      expect(manager.getPollInterval()).toBeLessThanOrEqual(33000);
+    });
   });
 
   describe('_getServiceAlerts', () => {
@@ -130,6 +143,60 @@ describe('AlertManager', () => {
       );
       expect(resultFail).toBe(false);
       consoleSpy.mockRestore();
+    });
+  });
+
+  describe('watchAlertStatus', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+      (requestAPI as jest.Mock).mockResolvedValue({ data: {} });
+      state.fetch.mockResolvedValue(undefined);
+      state.save.mockResolvedValue(undefined);
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should call _handleIncomingAlerts immediately (fire-and-forget)', async () => {
+      const spy = jest.spyOn(manager, '_handleIncomingAlerts');
+      manager.watchAlertStatus();
+      expect(spy).toHaveBeenCalledTimes(1);
+      spy.mockRestore();
+    });
+
+    it('should call _handleIncomingAlerts on interval when tab is visible', async () => {
+      const spy = jest.spyOn(manager, '_handleIncomingAlerts');
+      Object.defineProperty(document, 'visibilityState', {
+        value: 'visible',
+        writable: true,
+        configurable: true
+      });
+
+      await manager.watchAlertStatus();
+      expect(spy).toHaveBeenCalledTimes(1);
+
+      jest.advanceTimersByTime(manager.getPollInterval());
+      expect(spy).toHaveBeenCalledTimes(2);
+
+      spy.mockRestore();
+    });
+
+    it('should skip _handleIncomingAlerts when tab is hidden', async () => {
+      const spy = jest.spyOn(manager, '_handleIncomingAlerts');
+      Object.defineProperty(document, 'visibilityState', {
+        value: 'hidden',
+        writable: true,
+        configurable: true
+      });
+
+      await manager.watchAlertStatus();
+      expect(spy).toHaveBeenCalledTimes(1); // initial call
+
+      jest.advanceTimersByTime(manager.getPollInterval());
+      expect(spy).toHaveBeenCalledTimes(1); // not called again
+
+      spy.mockRestore();
     });
   });
 

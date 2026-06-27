@@ -11,6 +11,18 @@ import { Mutex } from './utils';
 export const ACTIVE_ALERTS = 'jupyterlab-wall:activeAlerts';
 export const DISMISSED_ALERTS = 'jupyterlab-wall:dismissedAlerts';
 
+interface IAlertData {
+  priority: number;
+  message: string;
+  active: boolean;
+  start: string;
+}
+
+interface IAlertResponse {
+  data: Record<string, IAlertData>;
+  poll_interval?: number;
+}
+
 /* JupyterLab commands that correspond to MainAreaWidget tab creation */
 export const TRIGGER_COMMANDS = [
   'code-viewer:open',
@@ -45,7 +57,7 @@ export class AlertManager extends Object {
     this.app = app;
     this.state = state;
     this.stateMutex = new Mutex();
-    this.pollInterval = 5000 + Math.floor(Math.random() * 1001);
+    this.pollInterval = 60000 + Math.floor(Math.random() * (60000 * 0.1));
 
     this.app.commands.commandExecuted.connect(async (_, args) => {
       // make sure new tabs opened after alerts have started will get a header
@@ -62,8 +74,22 @@ export class AlertManager extends Object {
   }
 
   async watchAlertStatus(): Promise<void> {
-    this._handleIncomingAlerts();
-    setInterval(this._handleIncomingAlerts, this.pollInterval);
+    // Run the initial check and wait for it to complete so that any
+    // server-provided poll interval is applied before scheduling the poller.
+    await this._handleIncomingAlerts();
+    this._scheduleNextPoll();
+  }
+
+  private _scheduleNextPoll(): void {
+    // Use a self-rescheduling timeout so that updates to the poll interval
+    // (e.g. a value provided by the server) take effect on the next poll
+    // instead of being locked to the value present when polling started.
+    setTimeout(async () => {
+      if (document.visibilityState !== 'hidden') {
+        await this._handleIncomingAlerts();
+      }
+      this._scheduleNextPoll();
+    }, this.pollInterval);
   }
 
   public get alertAddedSignal(): ISignal<this, AlertMessage> {
@@ -209,10 +235,15 @@ export class AlertManager extends Object {
 
   private async _getServiceAlerts(): Promise<AlertMessage[]> {
     // fetch alert status from the backend service
-    return requestAPI<any>('should_alert').then(async result => {
+    return requestAPI<IAlertResponse>('should_alert').then(async result => {
       try {
         if (result === null || result === undefined) {
           return [];
+        }
+        if (result.poll_interval) {
+          const interval = result.poll_interval;
+          this.pollInterval =
+            interval + Math.floor(Math.random() * (interval * 0.1));
         }
         const alertMessages: AlertMessage[] = [];
         for (const k in result.data) {

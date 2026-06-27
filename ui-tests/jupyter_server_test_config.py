@@ -26,6 +26,8 @@ c.AlertsConfig.alerts = {
     }
 }
 
+# Use a short poll interval for UI tests (default is 60s which is too slow for tests)
+c.AlertsConfig.poll_interval = 5
 # Uncomment to set server log level to debug level
 c.ServerApp.log_level = "DEBUG"
 c.ServerApp.token = ''

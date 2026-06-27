@@ -3130,7 +3130,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/galata@npm:^5.0.5":
+"@jupyterlab/galata@npm:5.2.4":
   version: 5.2.4
   resolution: "@jupyterlab/galata@npm:5.2.4"
   dependencies:
@@ -4414,7 +4414,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@playwright/test@npm:^1.37.0, @playwright/test@npm:^1.43.1":
+"@playwright/test@npm:1.46.1, @playwright/test@npm:^1.43.1":
   version: 1.46.1
   resolution: "@playwright/test@npm:1.46.1"
   dependencies:
@@ -10090,8 +10090,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "jupyterlab-wall-ui-tests@workspace:ui-tests"
   dependencies:
-    "@jupyterlab/galata": ^5.0.5
-    "@playwright/test": ^1.37.0
+    "@jupyterlab/galata": 5.2.4
+    "@playwright/test": 1.46.1
   languageName: unknown
   linkType: soft
 
